@@ -1,0 +1,85 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bggapp-deploy
+  namespace: bggns
+  labels:
+    app: bgg
+    name: bggapp-deploy
+spec:
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  revisionHistoryLimit: 10 # default is 10
+  replicas: 4
+  selector:
+    matchLabels:
+      app: bgg
+      commit: bggapppod
+  template:
+    metadata: 
+      name: myapppod
+      namespace: bggns
+      labels:
+        app: bgg
+        commit: bggapppod
+    spec:
+      containers:
+      - name: bggapppod-container
+        image: stackupiss/bgg-backend:v2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: bggapp-port
+          containerPort: 3000
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: bggapp-port
+          timeoutSeconds: 5
+          failureThreshold: 1
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: bggapp-port
+          timeoutSeconds: 5
+          failureThreshold: 3
+          successThreshold: 1
+        env:
+        - name: BGG_DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: bgg-config 
+              key: BGG_DB_HOST
+        - name: BGG_DB_USER
+          #value: root          
+          valueFrom:
+            configMapKeyRef:
+              name: bgg-config  
+              key: BGG_DB_USER
+        - name: BGG_DB_PASSWORD
+          #value: changeit
+          valueFrom:
+            secretKeyRef:
+              name: bgg-secret  
+              key: BGG_DB_PASSWORD
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bggapp-svc
+  namespace: bggns
+  labels:
+    app: bgg
+    name: bggapp-svc
+spec:
+  type: ClusterIP 
+  selector: 
+    app: bgg
+    commit: bggapppod
+  ports:k descr
+  - port: 3000 
+    targetPort: bggapp-port 

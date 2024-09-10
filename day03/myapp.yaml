@@ -1,0 +1,14 @@
+# Create secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cs-secret
+  namespace: csns
+  labels:
+    app: cs
+    name: cs-secret
+type: Opaque
+data:
+  PASSWORD: cGFzc3dvcmQ= # 'password' base64 encoded
+  SUDO_PASSWORD: cGFzc3dvcmQ= # 'password' base64 encoded
